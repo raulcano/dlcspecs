@@ -16,9 +16,9 @@ All payout functions in this document use the following common parameters:
 **Considerations:**   
 - The payout is in sats, not in BTC. This means that the proper units must be used along the construction of the formula using the `sats_per_btc` value.
 
-- The payout is built to be a non-negative outcome for both parties. The typical option's contract payout can be negative when looked as *how much did I lose* relative from what I entered the contract with. However, in the DLC arrangement, payouts must always be a non-negative outcome. To build a DLC option's contract, the funding transaction serves as a 'pool' of funds from which payouts depend of the outcome, meaning that both parties get either zero or a positive amount. The formulas need to be modified accordingly.  
-For example, for the seller of a call option, if the price at expiry is below the strike price, the seller gets:
-  - In a typical options contract: `(premium) * num_contracts`.
+- The payout is built to be a non-negative outcome for both parties. The typical option's contract payout can be negative when looked as *how much did I lose* relative from what I entered the contract with. However, in the DLC arrangement, payouts must always be a non-negative outcome. To build a DLC option's contract, the funding transaction serves as a 'pool' of funds from which payouts are sent, meaning that both parties get either zero or a positive amount. The formulas need to be built accordingly.  
+For example, if the price at expiry is below the strike price, the seller of a call option gets:
+  - In a typical options contract: `premium * num_contracts`.
   - In the DLC arrangement:  `(premium + col) * num_contracts`.
 
 - As described in this document, the `premium` owed to the seller is considered part of the payout at the *end* of the contract, that is, once it is settled. For a real life implementation, one may want to separate the premium to be paid upfront, for example, as an additional output to the seller in the funding transaction (and later setting to zero the `premium` variable in these formulas).
@@ -34,8 +34,8 @@ Solving for `upper_cap` we get:
 `upper_cap = sats_per_btc * strike / (sats_per_btc - col)`
 
 Observe that when `sats_per_btc <= col`:
-- If equal: denominator is zero (division by zero), cap is at infinity
-- If collateral > sats_per_btc: denominator is negative, resulting in negative cap (invalid) .
+- If equal: denominator is zero (division by zero), cap is at infinity.
+- If collateral > sats_per_btc: denominator is negative, resulting in negative cap (invalid).
 
 In both cases, the cap doesn't exist as a finite value. Hence, we use `max_u64` as the practical cap if `sats_per_btc <= col`.
 
@@ -54,6 +54,10 @@ Observe that the `lower_cap` is always greater than zero.
 ## Example 1: LONG CALL Payout (Buyer Side)
 
 A LONG CALL option gives the buyer the right to buy at the strike price. The payout function is constructed with 4 endpoints (0, strike, upper_cap, max_u64) and 3 pieces.
+
+![LONG CALL Payout Function](images/payout_function_long_call.png)
+
+*Figure 1: LONG CALL option payout curve showing the buyer's payout as a function of the price at expiry. Parameters: `strike` = 120,000 USD, `num_contracts` = 1, `col` = 100,000,000 sats (1BTC), `premium` = 5,000,000 sats. The `upper_cap` is at infinity, so we need to approximate with `upper_cap` = 2^64 -1 (max value of u64).*
 
 ### Payout Behavior
 
@@ -91,6 +95,10 @@ A LONG CALL option gives the buyer the right to buy at the strike price. The pay
 
 A SHORT CALL option obligates the seller to sell at the strike price if exercised. The payout function is constructed with 4 endpoints (0, strike, upper_cap, max_u64) and 3 pieces.
 
+![SHORT CALL Payout Function](images/payout_function_short_call.png)
+
+*Figure 2: SHORT CALL option payout curve showing the seller's payout as a function of the price at expiry. Parameters: `strike` = 120,000 USD, `num_contracts` = 1, `col` = 100,000,000 sats (1BTC), `premium` = 5,000,000 sats. The `upper_cap` is at infinity, so we need to approximate with `upper_cap` = 2^64 -1 (max value of u64).*
+
 ### Payout Behavior
 
 - **Price at expiry is EQUAL or LESS than the strike price:**
@@ -127,6 +135,10 @@ A SHORT CALL option obligates the seller to sell at the strike price if exercise
 
 A LONG PUT option gives the buyer the right to sell at the strike price. The payout function is constructed with 4 endpoints (0, lower_cap, strike, max_u64) and 3 pieces.
 
+![LONG PUT Payout Function](images/payout_function_long_put.png)
+
+*Figure 3: LONG PUT option payout curve showing the buyer's payout as a function of the price at expiry. Parameters: `strike` = 120,000 USD, `num_contracts` = 1, `col` = 100,000,000 sats (1BTC), `premium` = 5,000,000 sats. The `lower_cap` is calculated as `lower_cap` = `sats_per_btc` * `strike` / (`sats_per_btc` + `col`), which places it at `lower_cap` = 60,000 USD.*
+
 ### Payout Behavior
 
 - **Price at expiry is EQUAL or LESS than the lower cap:**
@@ -148,7 +160,7 @@ A LONG PUT option gives the buyer the right to sell at the strike price. The pay
 - Formula: `num_contracts * (((strike - price_at_expiry) / price_at_expiry) * sats_per_btc)`
 - Parameters:
   - `f_1`: `0`
-  - `f_2`: `num_contracts * sats_per_btc`
+  - `f_2`: `- num_contracts * sats_per_btc`
   - `a`: `1`
   - `b`: `0`
   - `c`: `0`
@@ -162,6 +174,10 @@ A LONG PUT option gives the buyer the right to sell at the strike price. The pay
 ## Example 4: SHORT PUT Payout (Seller Side)
 
 A SHORT PUT option obligates the seller to buy at the strike price if exercised. The payout function is constructed with 4 endpoints (0, lower_cap, strike, max_u64) and 3 pieces.
+
+![SHORT PUT Payout Function](images/payout_function_short_put.png)
+
+*Figure 4: SHORT PUT option payout curve showing the seller's payout as a function of the price at expiry. Parameters: `strike` = 120,000 USD, `num_contracts` = 1, `col` = 100,000,000 sats (1BTC), `premium` = 5,000,000 sats.  The `lower_cap` is calculated as `lower_cap` = `sats_per_btc` * `strike` / (`sats_per_btc` + `col`), which places it at `lower_cap` = 60,000 USD.*
 
 ### Payout Behavior
 
