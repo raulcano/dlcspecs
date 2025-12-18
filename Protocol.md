@@ -303,7 +303,7 @@ OP_HASH160 <20-bytes> OP_EQUAL
 # Pay-to-witness-pubkey-hash (P2WPKH), version 0
 OP_0 <20-bytes>
 
-# Pay-to-witness-pubkey-hash (P2WSH), version 0
+# Pay-to-witness-script-hash (P2WSH), version 0
 OP_0 <32-bytes>
 
 # Witness program versions 1 through 16, followed by a single push of 2 to 40 bytes
