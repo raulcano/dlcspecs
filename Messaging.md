@@ -120,14 +120,15 @@ integers can be omitted:
 
 The following convenience types are also defined:
 
-* `chain_hash`: a 32-byte chain identifier (see [BOLT #0](https://github.com/lightningnetwork/lightning-rfc/blob/master/00-introduction.md#chain_hash))
-* `contract_id`: a 32-byte contract_id (see [Protocol Specification](Protocol.md))
-* `sha256`: a 32-byte SHA2-256 hash
-* `signature`: a 64-byte bitcoin Elliptic Curve signature
-* `ecdsa_adaptor_signature`: a 65-byte ECDSA adaptor signature (TODO: link to doc once [#50](https://github.com/discreetlogcontracts/dlcspecs/issues/50) is done)
-* `dleq_proof`: a 97-byte zero-knowledge proof of discrete log equality (TODO: link to doc once [#50](https://github.com/discreetlogcontracts/dlcspecs/issues/50) is done)
-* `x_point`: a 32-byte x-only public key with implicit y-coordinate being even as in [BIP 340](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki#design)
-* `point`: a 33-byte Elliptic Curve point (compressed encoding as per [SEC 1 standard](http://www.secg.org/sec1-v2.pdf#subsubsection.2.3.3))
+* `chain_hash`: a 32-byte chain identifier (see [BOLT #0](https://github.com/lightningnetwork/lightning-rfc/blob/master/00-introduction.md#chain_hash)).
+* `contract_id`: a 32-byte contract_id (see [Protocol Specification](Protocol.md)).
+* `sha256`: a 32-byte SHA2-256 hash.
+* `signature`: a 64-byte bitcoin Elliptic Curve signature.
+* `ecdsa_adaptor_signature`: a 65-byte ECDSA adaptor signature (TODO: link to doc once [#50](https://github.com/discreetlogcontracts/dlcspecs/issues/50) is done).
+* `dleq_proof`: a 97-byte zero-knowledge proof of discrete log equality (TODO: link to doc once [#50](https://github.com/discreetlogcontracts/dlcspecs/issues/50) is done).
+* `x_point`: a 32-byte x-only public key with implicit y-coordinate being even as in [BIP 340](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki#design).
+* `point`: a 33-byte Elliptic Curve point (compressed encoding as per [SEC 1 standard](http://www.secg.org/sec1-v2.pdf#subsubsection.2.3.3)).
+* `scalar`: a 32-byte big-endian encoded integer as per [this description](https://github.com/discreetlogcontracts/dlcspecs/blob/master/ECDSA-adaptor.md#notation-and-conventions).
 * `spk`: A bitcoin script public key encoded as ASM prefixed with a `u16` value indicating its length.
 * `short_contract_id`: an 8 byte value identifying a contract funding transaction on-chain (see [BOLT #7](https://github.com/lightningnetwork/lightning-rfc/blob/master/07-routing-gossip.md#definition-of-short-channel-id))
 * `bigsize`: a variable-length, unsigned integer similar to Bitcoin's CompactSize encoding, but big-endian.  Described in [BigSize](https://github.com/lightningnetwork/lightning-rfc/blob/master/01-messaging.md#appendix-a-bigsize-test-vectors).
@@ -334,6 +335,41 @@ This type contains CET signatures and any necessary information linking the sign
    * ...
    * [`ecdsa_adaptor_signature`:`signature_n`]
    * [`dleq_proof`:`dleq_prf_n`]
+
+### The `ecdsa_adaptor_signature` Type
+This type contains an ECDSA adaptor signature, represented as a 65-byte stream that contains the following:  
+
+`R`: a 33-byte compressed elliptic-curve adaptor point as described in [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types).
+- The point `R` is calculated by multiplying the random value `r` by `G`, as described [here](https://note.com/crypto_garage/n/na1ef06177b27).
+
+`s'`: a 32-byte encrypted signature scalar. This is calculated as ```s' = r^-1(H(m) + rTp)``` as explained [here](https://note.com/crypto_garage/n/na1ef06177b27).  
+- Note that `H(m)` is the 32-byte transaction id `txid` (not to confuse with the `m_o` in the Tweak points, where `m_o` is the outcome value published by the oracle, such as `heads` or `tails`, etc.)
+- To calculate the adaptor signature scalar for numeric decomposition, one needs to calculate one tweak point `T_i` per digit and then obtain `T = T_0 + T_1 + ... + T_(i-1)` as described [here](https://medium.com/crypto-garage/optimizing-numeric-outcome-dlc-creation-6d6091ac0e47).
+
+#### `ecdsa_adaptor_signature`
+1. data: 
+  * [`point`:`R`]
+  * [`scalar`:`s'`]
+
+### The `dleq_proof` Type
+This type contains a 97-byte zero-knowledge proof of discrete log equality. The values here presented are built as described in [this article by Ichiro Kuwahara](https://medium.com/crypto-garage/adaptor-signature-in-discreet-log-contracts-on-ecdsa-c8c04197e11f).  
+
+`R'`: a 33-byte compressed elliptic-curve adaptor point as described in [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types).  
+- The point `R'` is derived as `R' = rT`, where `T` is the tweak point (or adaptor point).
+- The tweak point `T` is calculated as `T = R_o + H(R_o|P_o|m_o)`, where:
+  - `R_o` is the nonce point published by the oracle, encoded as `x_point` (see  [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types)).
+  - `P_o` is the oracle public key, encoded as `x_point` (see  [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types)).
+  - `m_o` is the outcome that the oracle commits to publish. 
+
+`e`: a 32-byte sha256 outcome representing a challenge calculated as `e = H(R|R'|R_2|R_2')` (see [here](https://note.com/crypto_garage/n/na1ef06177b27)).  
+
+`s`: a 32-byte signature verification scalar calculated as `s = r_2 + re` (see [here](https://note.com/crypto_garage/n/na1ef06177b27)).
+
+#### `dleq_proof`
+1. data: 
+  * [`point`:`R'`]
+  * [`sha256`:`e`]
+  * [`scalar`:`s`]
 
 ### The `funding_signatures` Type
 
