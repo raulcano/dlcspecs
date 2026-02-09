@@ -337,14 +337,19 @@ This type contains CET signatures and any necessary information linking the sign
    * [`dleq_proof`:`dleq_prf_n`]
 
 ### The `ecdsa_adaptor_signature` Type
-This type contains an ECDSA adaptor signature, represented as a 65-byte stream that contains the following:  
+This type contains an ECDSA adaptor signature, represented as a 65-byte stream as follows:  
 
 `R`: a 33-byte compressed elliptic-curve adaptor point as described in [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types).
-- The point `R` is calculated by multiplying the random value `r` by `G`, as described [here](https://note.com/crypto_garage/n/na1ef06177b27).
+- The point `R` is calculated by multiplying a random value `r` by `G`, as described [here](https://note.com/crypto_garage/n/na1ef06177b27).
 
 `s'`: a 32-byte encrypted signature scalar. This is calculated as ```s' = r^-1(H(m) + rTp)``` as explained [here](https://note.com/crypto_garage/n/na1ef06177b27).  
-- Note that `H(m)` is the 32-byte transaction id `txid` (not to confuse with the `m_o` in the Tweak points, where `m_o` is the outcome value published by the oracle, such as `heads` or `tails`, etc.)
-- To calculate the adaptor signature scalar for numeric decomposition, one needs to calculate one tweak point `T_i` per digit and then obtain `T = T_0 + T_1 + ... + T_(i-1)` as described [here](https://medium.com/crypto-garage/optimizing-numeric-outcome-dlc-creation-6d6091ac0e47).
+- `r` is the same random value used for `R`.
+- `T` is a tweak point (or adaptor point) and is calculated as `T = R_o + H(R_o|P_o|m_o)`, where:
+  - `R_o` is the nonce point published by the oracle, encoded as `x_point` (see  [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types)).
+  - `P_o` is the oracle public key, encoded as `x_point` (see  [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types)).
+  - `m_o` is the outcome that the oracle commits to publish. 
+- `H(m)` is the 32-byte transaction id `txid` (not to confuse with the `m_o` in the Tweak points, where `m_o` is the outcome value published by the oracle, such as `heads` or `tails`, etc.)
+- In numeric decomposition, one needs to calculate one tweak point `T_i` per digit and then obtain `T = T_0 + T_1 + ... + T_(i-1)` as described [here](https://medium.com/crypto-garage/optimizing-numeric-outcome-dlc-creation-6d6091ac0e47).
 
 #### `ecdsa_adaptor_signature`
 1. data: 
@@ -355,13 +360,9 @@ This type contains an ECDSA adaptor signature, represented as a 65-byte stream t
 This type contains a 97-byte zero-knowledge proof of discrete log equality. The values here presented are built as described in [this article by Ichiro Kuwahara](https://medium.com/crypto-garage/adaptor-signature-in-discreet-log-contracts-on-ecdsa-c8c04197e11f).  
 
 `R'`: a 33-byte compressed elliptic-curve adaptor point as described in [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types).  
-- The point `R'` is derived as `R' = rT`, where `T` is the tweak point (or adaptor point).
-- The tweak point `T` is calculated as `T = R_o + H(R_o|P_o|m_o)`, where:
-  - `R_o` is the nonce point published by the oracle, encoded as `x_point` (see  [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types)).
-  - `P_o` is the oracle public key, encoded as `x_point` (see  [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types)).
-  - `m_o` is the outcome that the oracle commits to publish. 
+- The point `R'` is derived as `R' = rT`, where `T` is the tweak point (or adaptor point) and `r` is the same random value used to calculate `R`.
 
-`e`: a 32-byte sha256 outcome representing a challenge calculated as `e = H(R|R'|R_2|R_2')` (see [here](https://note.com/crypto_garage/n/na1ef06177b27)).  
+`e`: a 32-byte sha256 outcome representing a challenge calculated as `e = H(R|R'|R_2|R_2')` (see [here](https://note.com/crypto_garage/n/na1ef06177b27)). Also, the hash function needs to use a tag as specified [here](https://github.com/discreetlogcontracts/dlcspecs/blob/master/ECDSA-adaptor.md#proof-of-discrete-logarithm-equality).
 
 `s`: a 32-byte signature verification scalar calculated as `s = r_2 + re` (see [here](https://note.com/crypto_garage/n/na1ef06177b27)).
 
