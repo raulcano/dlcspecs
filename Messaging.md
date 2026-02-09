@@ -360,11 +360,16 @@ This type contains an ECDSA adaptor signature, represented as a 65-byte stream a
 This type contains a 97-byte zero-knowledge proof of discrete log equality. The values here presented are built as described in [this article by Ichiro Kuwahara](https://medium.com/crypto-garage/adaptor-signature-in-discreet-log-contracts-on-ecdsa-c8c04197e11f).  
 
 `R'`: a 33-byte compressed elliptic-curve adaptor point as described in [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types).  
-- The point `R'` is derived as `R' = rT`, where `T` is the tweak point (or adaptor point) and `r` is the same random value used to calculate `R`.
+- The point `R'` is derived as `R' = r * T`, where `T` is the tweak point (or adaptor point) and `r` is the same random value used to calculate `R`.
 
-`e`: a 32-byte sha256 outcome representing a challenge calculated as `e = H(R|R'|R_2|R_2')` (see [here](https://note.com/crypto_garage/n/na1ef06177b27)). Also, the hash function needs to use a tag as specified [here](https://github.com/discreetlogcontracts/dlcspecs/blob/master/ECDSA-adaptor.md#proof-of-discrete-logarithm-equality).
+`e`: a 32-byte sha256 outcome representing a challenge calculated as `e = H(R|R'|R_2|R_2')` (see [here](https://note.com/crypto_garage/n/na1ef06177b27)). Also, the hash function needs to use a tag as specified [here](https://github.com/discreetlogcontracts/dlcspecs/blob/master/ECDSA-adaptor.md#proof-of-discrete-logarithm-equality). The points `R_2` and `R_2'` are defined as follows: 
+  
+  - `R_2 = r_2 * G`
+  - `R_2' = r_2 * T`
 
-`s`: a 32-byte signature verification scalar calculated as `s = r_2 + re` (see [here](https://note.com/crypto_garage/n/na1ef06177b27)).
+`s`: a 32-byte signature verification scalar calculated as `s = r_2 + re` (see [here](https://note.com/crypto_garage/n/na1ef06177b27)), where:  
+
+  - `r_2` is a random value, used to generate `R_2` and `R_2'`.
 
 #### `dleq_proof`
 1. data: 
