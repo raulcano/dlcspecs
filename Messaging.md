@@ -339,7 +339,7 @@ This type contains CET signatures and any necessary information linking the sign
 ### The `ecdsa_adaptor_signature` Type
 This type contains an ECDSA adaptor signature, represented as a 65-byte stream as follows:  
 
-`R`: a 33-byte compressed elliptic-curve adaptor point as described in [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types).
+`R`: a 33-byte compressed elliptic-curve point as described in [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types).
 - The point `R` is calculated by multiplying a random value `k` by the adaptor point `Y`, as described [here](https://github.com/discreetlogcontracts/dlcspecs/blob/master/ECDSA-adaptor.md#encrypted-signing).
 - `Y` is an adaptor point calculated as defined [here](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Introduction.md#signature-point).
 
