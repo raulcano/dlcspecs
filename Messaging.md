@@ -344,7 +344,7 @@ This type contains an ECDSA adaptor signature, represented as a 65-byte stream a
 
 `s'`: a 32-byte encrypted signature scalar. This is calculated as `s' = r^-1 * (H(m) + r * T * p)` as explained [here](https://note.com/crypto_garage/n/na1ef06177b27).  
 - `r` is the same random value used for `R`.
-- `T` is a tweak point (or adaptor point) and is calculated as `T = R_o + H(R_o|P_o|m_o)`, where:
+- `T` is a tweak point (or adaptor point) and is calculated as `T = R_o + H(P_o|R_o|m_o)`, where:
   - `R_o` is the nonce point published by the oracle, encoded as `x_point` (see  [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types)).
   - `P_o` is the oracle public key, encoded as `x_point` (see  [Fundamental Types](https://github.com/discreetlogcontracts/dlcspecs/blob/master/Messaging.md#fundamental-types)).
   - `m_o` is the outcome that the oracle commits to publish. 
