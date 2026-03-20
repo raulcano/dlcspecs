@@ -346,6 +346,7 @@ This type contains an ECDSA adaptor signature, represented as a 65-byte stream a
 `s_a`: a 32-byte encrypted signature scalar. This is calculated as `s_a = k⁻¹ (m + r * x)` as explained [here](https://github.com/discreetlogcontracts/dlcspecs/blob/master/ECDSA-adaptor.md#encrypted-signing).  
 - `k` is the same random value used to obtain `R`.
 - `m` is the 32-byte transaction digest.
+- `r`  is the x-coordinate of `R` (mod `n`)
 - `x` is the signer's private key.
 
 
